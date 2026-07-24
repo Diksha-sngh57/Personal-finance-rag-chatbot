@@ -1,0 +1,42 @@
+# --- Part 1: Streamlit UI stage ---
+streamlit==1.38.0
+pandas==2.2.2
+ 
+# --- Part 2: Synthetic data generation + Bronze layer ETL ---
+pyspark==3.5.1         # requires a local JDK 11 or 17 — see note below
+pyarrow==17.0.0         # Bronze parquet writer (writer.py bypasses Spark's own writer)
+pdfplumber==0.11.4      # PDF table extraction
+reportlab==4.2.2        # synthetic PDF statement generation
+Faker==26.0.0           # synthetic account holder / merchant data
+ 
+# IMPORTANT (Windows): pyspark needs a real JDK on PATH, not just Python.
+#   1. Install Eclipse Temurin JDK 17: https://adoptium.net/
+#   2. Set JAVA_HOME to the JDK install folder and add %JAVA_HOME%\bin to PATH.
+#   3. Verify with: java -version
+# Without this, `python scripts/run_bronze_pipeline.py` fails immediately
+# with "JAVA_HOME is not set" — before any of our own code even runs.
+ 
+# --- Part 4: LLM categorization (Gold layer) ---
+groq==0.30.0            # Groq API client — see src/gold/categorizer.py for model choice notes
+python-dotenv==1.0.1     # loads GROQ_API_KEY from .env instead of hardcoding it
+tenacity==8.5.0          # retry/backoff for the Groq API calls (already a transitive
+                         # dependency via streamlit, pinned explicitly here since we
+                         # import it directly and shouldn't rely on that silently)
+ 
+# IMPORTANT: create a .env file in the project root before running Part 4
+# (copy .env.example to .env and fill in GROQ_API_KEY). Never commit .env —
+# it's already in .gitignore.
+ 
+# --- Part 6: RAG chatbot (semantic search over transactions) ---
+chromadb==1.5.9              # local persistent vector store, no server needed
+sentence-transformers==5.5.1  # local CPU embeddings — pulls in torch (large download,
+                               # first run also downloads the ~80MB model from HF, cached after)
+ 
+# If EMBEDDING_MODEL_NAME in src/config.py ever changes, delete
+# data/vector_store/ and reindex — embedding dimensionality is fixed per
+# collection at creation time; a model swap raises InvalidDimensionException
+# on the next add/query otherwise.
+ 
+# Note: boto3 (S3), psycopg2 (Neon Postgres), and apache-airflow are still
+# deferred to later parts.
+plotly

@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.env
+data/
+.spark_work/
+test_chroma_dir/
+test.parquet
+chroma.sqlite3
+.vscode/
+.idea/
